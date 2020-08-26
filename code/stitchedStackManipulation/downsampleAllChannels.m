@@ -20,11 +20,11 @@ function downsampleAllChannels(voxelSize,fileFormat)
 %
 % See also - resampleVolume, rescaleStitched
 
-stitchedDataInfo=findStitchedData;
-if isempty(stitchedDataInfo)
-    fprintf('No stitched data found by %s. Quitting\n', mfilename)
-    return
-end
+% stitchedDataInfo=findStitchedData;
+% if isempty(stitchedDataInfo)
+%     fprintf('No stitched data found by %s. Quitting\n', mfilename)
+%     return
+% end
 
 if nargin<1 || isempty(voxelSize)
     % Choose pyramid to make based upon the resolution
@@ -60,8 +60,8 @@ end
 
 
 % Which channels are available?
-chan = stitchedDataInfo.channelsPresent;
-
+% chan = stitchedDataInfo.channelsPresent;
+chan = [0,1,2];
 % Downsample those channels
 for ii = 1:length(chan)
     tChan = chan(ii);

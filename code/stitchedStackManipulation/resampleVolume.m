@@ -48,14 +48,19 @@ function varargout=resampleVolume(channel,targetDims,fileFormat,savePath)
 
 % Parse input arguments
 % Find a stitched image directory
-stitchedDataInfo=findStitchedData;
-if isempty(stitchedDataInfo)
-    fprintf('resampleVolume.m Finds no stitched data to resample.\n')
-    return
-end
+% stitchedDataInfo=findStitchedData;
+% if isempty(stitchedDataInfo)
+%     fprintf('resampleVolume.m Finds no stitched data to resample.\n')
+%     return
+% end
 
-stitchedDataInd=1;
-stitchedDir = stitchedDataInfo(stitchedDataInd).stitchedBaseDir;
+% stitchedDataInd=1;
+% stitchedDir = stitchedDataInfo(stitchedDataInd).stitchedBaseDir;
+stitchedDir = '/home/zhiwen/Documents/samples/AD_0009/stitchedImages_100';
+xy = 5.9;
+z = 5;
+Fname = 'AD_0009_';
+downsampledFname = [Fname num2str(channel)];
 
 origDataDir = fullfile(stitchedDir, num2str(channel));
 if ~exist(origDataDir)
@@ -63,7 +68,7 @@ if ~exist(origDataDir)
     return
 end
 
-files=dir(fullfile(origDataDir,'sec*.tif'));
+files=dir(fullfile(origDataDir,'*.tif'));
 if isempty(files)
     error('resampleVolume.m finds no tiffs found in %s',origDataDir)
 end
@@ -105,15 +110,15 @@ end
 
 
 %Calculate the original image size
-M=readMetaData2Stitchit;
-z=stitchedDataInfo(stitchedDataInd).zSpacingInMicrons;
+% M=readMetaData2Stitchit;
+% z=stitchedDataInfo(stitchedDataInd).zSpacingInMicrons;
 
-if z==0
-    fprintf('** Z voxel size reported as zero. This is not right. Correct meta-data file and re-run %s **\n', mfilename)
-    return
-end
+% if z==0
+%     fprintf('** Z voxel size reported as zero. This is not right. Correct meta-data file and re-run %s **\n', mfilename)
+%     return
+% end
 
-xy=stitchedDataInfo(stitchedDataInd).micsPerPixel;
+% xy=stitchedDataInfo(stitchedDataInd).micsPerPixel;
 origDims = [xy,z];
 fprintf('original resolution %0.2f um in x/y and %0.1f um in z\n', xy, z)
 
@@ -143,14 +148,14 @@ end
 
 
 %Create file name
-paramFile=getTiledAcquisitionParamFile;
-if startsWith(paramFile, 'recipe')
-      % We have BakingTray Data
-      downsampledFname = strcat('ds_', paramFile(8:end-4));
-else
-      % We have TissueVision
-      downsampledFname = [regexprep(paramFile(1:end-4),'Mosaic_','ds')];
-end
+% paramFile=getTiledAcquisitionParamFile;
+% if startsWith(paramFile, 'recipe')
+%       % We have BakingTray Data
+%       downsampledFname = strcat('ds_', paramFile(8:end-4));
+% else
+%       % We have TissueVision
+%       downsampledFname = [regexprep(paramFile(1:end-4),'Mosaic_','ds')];
+% end
 
 if mod(targetDims(1),1)==0
       downsampledFname=[downsampledFname, sprintf('_%d',targetDims(1))];
@@ -184,11 +189,11 @@ downsampledFname = fullfile(savePath,downsampledFname);
 
 fid = fopen([downsampledFname,'.txt'],'w');
 
-metaData = readMetaData2Stitchit(paramFile);
-fprintf(fid,'Downsampling %s\nAcquired on: %s\nDownsampled: %s\n', metaData.sample.ID, metaData.sample.acqStartTime, datestr(now));
-if strcmp('tiff',fileFormat)
-    fprintf(fid,'downsample file name: %s.tif\n',downsampledFname);
-end
+% metaData = readMetaData2Stitchit(paramFile);
+% fprintf(fid,'Downsampling %s\nAcquired on: %s\nDownsampled: %s\n', metaData.sample.ID, metaData.sample.acqStartTime, datestr(now));
+% if strcmp('tiff',fileFormat)
+%     fprintf(fid,'downsample file name: %s.tif\n',downsampledFname);
+% end
 
 
 %report what we will do
@@ -217,21 +222,21 @@ parfor ii=1:length(files)
     fprintf('Resampling %03d\n', ii)
     im=stitchit.tools.openTiff(fullfile(origDataDir,files(ii).name));
     vol(:,:,ii)=imresize(im,xyRescaleFactor);
-    % Extract the physical and optical section numbers from the file name
-    tok=regexp(files(ii).name,'\w+_(\d+)_(\d+)\.tif','tokens'); 
-    planeID(ii,:) = cellfun(@str2double,(tok{1}));
+%     % Extract the physical and optical section numbers from the file name
+%     tok=regexp(files(ii).name,'\w+_(\d+)_(\d+)\.tif','tokens'); 
+%     planeID(ii,:) = cellfun(@str2double,(tok{1}));
 
 end
 
-% Correct z illumunation
-if length(unique(planeID(:,2)))>1
-    vol = correctZilum(vol,planeID);
-end
-
-
-if nargout>0
-    varargout{1}=vol;
-end
+% % Correct z illumunation
+% if length(unique(planeID(:,2)))>1
+%     vol = correctZilum(vol,planeID);
+% end
+% 
+% 
+% if nargout>0
+%     varargout{1}=vol;
+% end
 
 
 %resample in z
